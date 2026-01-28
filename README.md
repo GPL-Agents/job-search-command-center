@@ -1,6 +1,23 @@
 # Job Search Command Center — Public Template
 
 ## What this is
+This repository contains the setup guide for the **Job Search Command Center – Public Template**.
+
+The Job Search Command Center is a configurable ChatGPT-based tool that helps you:
+- Triage and prioritize job opportunities
+- Track applications and status changes
+- Plan follow-ups and next actions
+- Apply a consistent scoring framework to roles
+
+This is a **template**, not a hosted service.
+
+You will run everything in your own accounts:
+- Your job data lives in your own Google Sheet
+- Any backend runs in your own environment (Google Apps Script or Vercel)
+- You control all credentials and access
+
+No job data, resumes, or private information are included or stored by this project.
+
 ## Quick start (5 minutes)
 ## Setup path A (recommended): Google Sheets + Apps Script
 ## Setup path B (advanced): GitHub + Vercel
