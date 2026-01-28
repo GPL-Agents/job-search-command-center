@@ -230,7 +230,7 @@ function json_(obj, statusCode) {
   output.setMimeType(ContentService.MimeType.JSON);
   return output;
 }
----
+```
 
 ## Test the backend (Path A)
 
