@@ -19,6 +19,33 @@ You will run everything in your own accounts:
 No job data, resumes, or private information are included or stored by this project.
 
 ## Quick start (5 minutes)
+This template starts empty. Most people can be up and running in about 5 minutes using Google Sheets.
+
+Before you begin, you’ll need:
+- A Google account
+- Access to Google Sheets
+- The Job Search Command Center GPT link
+
+There are two setup paths:
+
+- **Path A (recommended): Google Sheets + Apps Script**
+  - Fastest
+  - No servers
+  - No GitHub or Vercel required
+
+- **Path B (advanced): GitHub + Vercel**
+  - More control and extensibility
+  - More setup
+  - Optional
+
+If you’re not sure which to choose, start with **Path A**. You can switch later.
+
+High-level steps:
+1. Create a Google Sheet to store your job pipeline
+2. Set up a lightweight backend
+3. Paste your resume and configuration into the GPT
+4. Start using the Job Search Command Center
+
 ## Setup path A (recommended): Google Sheets + Apps Script
 ## Setup path B (advanced): GitHub + Vercel
 ## Connect the GPT
