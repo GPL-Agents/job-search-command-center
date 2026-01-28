@@ -74,7 +74,162 @@ Once the sheet exists, you’ll add a small Apps Script backend to let the GPT r
    Extensions → Apps Script
 2. Delete any existing code in the editor.
 3. This script will expose a simple HTTP endpoint that the GPT can call to read and update your sheet.
+### Apps Script code (copy/paste)
+4. In Apps Script, create a new file named `Code.gs` (or use the default file) and paste the code below.
+5. Replace the value of `SHEET_NAME` if you used a different tab name than `Opportunities`.
+6. Click **Deploy → New deployment**:
+   - Type: **Web app**
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+   - Click **Deploy**
+   - Copy the **Web app URL** (you’ll use it in the GPT later)
+7. The first time you deploy, Google will prompt you to authorize access. Approve the permissions.
 
+/**
+ * Job Search Command Center — Apps Script backend (minimal)
+ * Provides a simple JSON API for reading and updating the "Opportunities" sheet.
+ */
+
+const SHEET_NAME = 'Opportunities';
+
+function doGet(e) {
+  return handleRequest_(e);
+}
+
+function doPost(e) {
+  return handleRequest_(e);
+}
+
+function handleRequest_(e) {
+  try {
+    const params = (e && e.parameter) ? e.parameter : {};
+    const action = (params.action || '').toLowerCase();
+
+    if (!action) {
+      return json_({ ok: false, error: 'Missing action' }, 400);
+    }
+
+    if (action === 'health') {
+      return json_({ ok: true, message: 'ok' });
+    }
+
+    if (action === 'list') {
+      // Returns all rows as array of objects keyed by header name
+      const sheet = getSheet_();
+      const values = sheet.getDataRange().getValues();
+      if (values.length < 2) return json_({ ok: true, rows: [] });
+
+      const headers = values[0].map(h => String(h).trim());
+      const rows = values.slice(1).filter(r => r.some(c => String(c).trim() !== ''));
+
+      const objects = rows.map(r => {
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = r[i]; });
+        return obj;
+      });
+
+      return json_({ ok: true, rows: objects });
+    }
+
+    if (action === 'append') {
+      // Append a row. Expects JSON body: { row: { "Company": "...", ... } }
+      const body = parseJsonBody_(e);
+      const rowObj = body.row;
+      if (!rowObj || typeof rowObj !== 'object') {
+        return json_({ ok: false, error: 'Missing row object' }, 400);
+      }
+
+      const sheet = getSheet_();
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+
+      const row = headers.map(h => (h in rowObj ? rowObj[h] : ''));
+      sheet.appendRow(row);
+
+      return json_({ ok: true, appended: true });
+    }
+
+    if (action === 'update') {
+      /**
+       * Update rows by matching Company + Role (simple key).
+       * Expects JSON body: { match: { Company: "...", Role: "..." }, updates: { Status: "...", Notes: "..." } }
+       */
+      const body = parseJsonBody_(e);
+      const match = body.match || {};
+      const updates = body.updates || {};
+
+      if (!match.Company || !match.Role) {
+        return json_({ ok: false, error: 'match.Company and match.Role are required' }, 400);
+      }
+
+      const sheet = getSheet_();
+      const range = sheet.getDataRange();
+      const values = range.getValues();
+      if (values.length < 2) return json_({ ok: false, error: 'No rows to update' }, 400);
+
+      const headers = values[0].map(h => String(h).trim());
+      const headerIndex = {};
+      headers.forEach((h, i) => { headerIndex[h] = i; });
+
+      const companyIdx = headerIndex['Company'];
+      const roleIdx = headerIndex['Role'];
+
+      if (companyIdx === undefined || roleIdx === undefined) {
+        return json_({ ok: false, error: 'Sheet must include Company and Role columns' }, 400);
+      }
+
+      let updatedCount = 0;
+
+      for (let r = 1; r < values.length; r++) {
+        const rowCompany = String(values[r][companyIdx] || '').trim();
+        const rowRole = String(values[r][roleIdx] || '').trim();
+
+        if (rowCompany === String(match.Company).trim() && rowRole === String(match.Role).trim()) {
+          Object.keys(updates).forEach(k => {
+            if (headerIndex[k] !== undefined) {
+              values[r][headerIndex[k]] = updates[k];
+            }
+          });
+          updatedCount++;
+        }
+      }
+
+      if (updatedCount > 0) {
+        range.setValues(values);
+      }
+
+      return json_({ ok: true, updatedCount });
+    }
+
+    return json_({ ok: false, error: `Unknown action: ${action}` }, 400);
+
+  } catch (err) {
+    return json_({ ok: false, error: String(err && err.message ? err.message : err) }, 500);
+  }
+}
+
+function getSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error(`Sheet "${SHEET_NAME}" not found`);
+  return sheet;
+}
+
+function parseJsonBody_(e) {
+  const raw = e && e.postData && e.postData.contents ? e.postData.contents : '';
+  if (!raw) return {};
+  return JSON.parse(raw);
+}
+
+function json_(obj, statusCode) {
+  const output = ContentService.createTextOutput(JSON.stringify(obj));
+  output.setMimeType(ContentService.MimeType.JSON);
+
+  // Apps Script doesn't let you set HTTP status directly in ContentService,
+  // but including it in the payload helps debugging.
+  if (statusCode) obj.status = statusCode;
+
+  return output;
+}
 
 
 ## Setup path B (advanced): GitHub + Vercel
