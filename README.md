@@ -26,7 +26,7 @@ Working through Vercel and GitHub will take longer, but provides more control an
 Before you begin, you’ll need:
 - A Google account
 - Access to Google Sheets
-- The Job Search Command Center GPT link
+- The Job Search Command Center GPT link https://chatgpt.com/g/g-697a162c9eb08191a5f24fb6c6f74980-job-search-command-center-public-template
 
 High-level steps:
 1. Create a Google Sheet to store your job pipeline
