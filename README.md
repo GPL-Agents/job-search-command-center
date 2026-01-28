@@ -85,6 +85,7 @@ Once the sheet exists, you’ll add a small Apps Script backend to let the GPT r
    - Copy the **Web app URL** (you’ll use it in the GPT later)
 7. The first time you deploy, Google will prompt you to authorize access. Approve the permissions.
 
+```js
 /**
  * Job Search Command Center — Apps Script backend (minimal)
  * Provides a simple JSON API for reading and updating the "Opportunities" sheet.
@@ -221,15 +222,97 @@ function parseJsonBody_(e) {
 }
 
 function json_(obj, statusCode) {
-  const output = ContentService.createTextOutput(JSON.stringify(obj));
-  output.setMimeType(ContentService.MimeType.JSON);
-
   // Apps Script doesn't let you set HTTP status directly in ContentService,
   // but including it in the payload helps debugging.
   if (statusCode) obj.status = statusCode;
 
+  const output = ContentService.createTextOutput(JSON.stringify(obj));
+  output.setMimeType(ContentService.MimeType.JSON);
   return output;
 }
+---
+
+## Test the backend (Path A)
+
+These tests confirm your Apps Script Web App is reachable and can read and write your `Opportunities` sheet.
+
+### Health check (GET)
+
+Paste this into a browser, replacing `YOUR_WEB_APP_URL` with your deployed Apps Script Web App URL:
+
+YOUR_WEB_APP_URL?action=health
+
+Expected response:
+
+{"ok":true,"message":"ok"}
+
+---
+
+### List rows (GET)
+
+Paste this into a browser:
+
+YOUR_WEB_APP_URL?action=list
+
+Expected result:
+- If your sheet only has headers, `rows` will be empty
+- Otherwise, `rows` will contain your job data keyed by column name
+
+---
+
+### Append a test row (POST)
+
+This should add a new row to your sheet.
+
+curl -X POST "YOUR_WEB_APP_URL?action=append" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "row": {
+      "Company": "Test Company",
+      "Role": "Test Role",
+      "Location": "Remote",
+      "Status": "Applied",
+      "Date Applied": "2026-01-28",
+      "Source": "Backend test",
+      "Comp Range": "",
+      "Priority": "",
+      "Notes": "Created during backend test"
+    }
+  }'
+
+Expected response:
+
+{"ok":true,"appended":true}
+
+Refresh the Google Sheet and confirm the row appears.
+
+---
+
+### Update the test row (POST)
+
+This updates rows by matching Company + Role.
+
+curl -X POST "YOUR_WEB_APP_URL?action=update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "match": { "Company": "Test Company", "Role": "Test Role" },
+    "updates": { "Status": "Interviewing", "Notes": "Updated during backend test" }
+  }'
+
+Expected response:
+
+{"ok":true,"updatedCount":1}
+
+---
+
+### Common errors
+
+- Missing `action` parameter in the URL
+- Sheet tab name does not match `SHEET_NAME`
+- `Company` and `Role` columns are required for updates
+
+### 1) Health check (GET)
+Paste this into a browser (replace `YOUR_WEB_APP_URL`):
 
 
 ## Setup path B (advanced): GitHub + Vercel
