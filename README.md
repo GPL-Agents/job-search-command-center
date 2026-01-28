@@ -311,9 +311,6 @@ Expected response:
 - Sheet tab name does not match `SHEET_NAME`
 - `Company` and `Role` columns are required for updates
 
-### 1) Health check (GET)
-Paste this into a browser (replace `YOUR_WEB_APP_URL`):
-
 
 ## Setup path B (advanced): GitHub + Vercel
 ## Connect the GPT
