@@ -74,6 +74,7 @@ Once the sheet exists, you’ll add a small Apps Script backend to let the GPT r
    Extensions → Apps Script
 2. Delete any existing code in the editor.
 3. This script will expose a simple HTTP endpoint that the GPT can call to read and update your sheet.
+
 ### Apps Script code (copy/paste)
 4. In Apps Script, create a new file named `Code.gs` (or use the default file) and paste the code below.
 5. Replace the value of `SHEET_NAME` if you used a different tab name than `Opportunities`.
@@ -257,8 +258,6 @@ YOUR_WEB_APP_URL?action=list
 Expected result:
 - If your sheet only has headers, `rows` will be empty
 - Otherwise, `rows` will contain your job data keyed by column name
-
----
 
 ### Append a test row (POST)
 
